@@ -1,6 +1,7 @@
 import type { AWS } from '@serverless/typescript';
 
-import hello from '@functions/hello';
+import functions from './serverless/functions'
+import dynamoResources from './serverless/dynamoResources'
 
 const serverlessConfiguration: AWS = {
   service: 'urlshortener',
@@ -9,6 +10,14 @@ const serverlessConfiguration: AWS = {
   provider: {
     name: 'aws',
     runtime: 'nodejs14.x',
+    region: 'us-east-1',
+    iamRoleStatements: [
+      {
+        Effect: 'Allow',
+        Action: 'dynamodb:*',
+        Resource: 'arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.urlTableName}'
+      }
+    ],
     apiGateway: {
       minimumCompressionSize: 1024,
       shouldStartNameWithService: true,
@@ -16,12 +25,25 @@ const serverlessConfiguration: AWS = {
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
       NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
+      urlTable: '${self:custom.urlTableName}',
+      baseUrl: {
+        'Fn::Join': [
+          '',
+          ['https:://', { Ref: 'HttpApi'}, '.execute-api.${self:provider.region}.amazonaws.com']
+        ]
+      }
     },
   },
   // import the function via paths
-  functions: { hello },
+  functions,
+  resources: {
+    Resources: {
+      ...dynamoResources
+    }
+  },
   package: { individually: true },
   custom: {
+    urlTableName: '${sls:stage}-url-table',
     esbuild: {
       bundle: true,
       minify: false,
