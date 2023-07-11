@@ -18,7 +18,7 @@ export const handler = async (event: APIGatewayProxyEvent) => {
         const record = await dynamo.get(code, tableName)
 
         const originalUrl = record.originalUrl
-        return formatJSONResponse({ data: { originalUrl }})
+        return formatJSONResponse({ statusCode: 301, headers: { Location: originalUrl }, data: { }})
     } catch (error){
         console.log('error', error)
         return formatJSONResponse({
