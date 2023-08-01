@@ -26,7 +26,14 @@ const functions: AWS["functions"] = {
                     ]
                 }
             }
-        ]
+        ],
+        //@ts-expect-error
+        //sns:Publish should be in Action array
+        iamRoleStatements: [{
+            Effect: 'Allow',
+            Action: ['ses:SendEmail',],
+            Resource: '*',
+        }]
     }
 }
 
